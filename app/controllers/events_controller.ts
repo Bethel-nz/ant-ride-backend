@@ -26,8 +26,9 @@ export default class EventsController {
         message: `Unable to create event, error message: ${error.message}`,
       })
     } else {
-      // confirmation sms's will be sent 48 hours before carpool. optimized carpools will be made 24 hours
+
       createCronJob(payload.date_time, event_code)
+
       return response.ok({
         status: 'success',
         message: 'Event created successfully!',
