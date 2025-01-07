@@ -67,7 +67,12 @@ export default class CarpoolsController {
       })
     }
 
-    let geoapify_response: any = await geoapify_create_optimized_carpools(data, riders, drivers)
+    let geoapify_response: any = await geoapify_create_optimized_carpools(
+      data,
+      riders,
+      drivers,
+      payload.max_detour_time || 30
+    )
 
     let carpool_groups: any = fill_carpool_objects(geoapify_response)
 

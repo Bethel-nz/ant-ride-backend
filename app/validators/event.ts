@@ -27,6 +27,7 @@ export const JoinParticipantsValidator = vine.compile(
     can_pickup: vine.boolean(),
     phone_num: vine.string().maxLength(10),
     seats_available: vine.number().withoutDecimals().min(0).max(7),
+    max_detour_time: vine.number().min(30).max(60),
   })
 )
 
@@ -51,5 +52,6 @@ export const CreateCarpoolsValidator = vine.compile(
     password: vine.string().maxLength(100),
     gender: vine.enum(['Male', 'Female']),
     confirmed: vine.boolean(),
+    max_detour_time: vine.number().optional()
   })
 )

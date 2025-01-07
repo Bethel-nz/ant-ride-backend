@@ -22,7 +22,7 @@ export async function send_sms(message: string, to?: string) {
     phone_number = "+1" + to
   }
 
-  // https://www.twilio.com/docs/messaging/tutorials/how-to-send-sms-messages/node
+  https://www.twilio.com/docs/messaging/tutorials/how-to-send-sms-messages/node
   await client.messages.create({
     to: phone_number,
     from: twilo_number,
@@ -31,19 +31,19 @@ export async function send_sms(message: string, to?: string) {
 }
 
 export async function send_confirmation_sms(event_name: string,
-                                            event_code: string,
-                                            edit_code: string,
-                                            number: string) {
-    send_sms(`Hello from ant ride.\
+  event_code: string,
+  edit_code: string,
+  number: string) {
+  send_sms(`Hello from ant ride.\
               \n\nTo confirm your participation in a carpool in the event titled "${event_name}",\
               please open this page to indicate your intent: https://antride.ca/confirm?event_code=${event_code}&edit_code=${edit_code}`,
-              number)
+    number)
 }
 
 export async function send_carpools_sms(unassigned_drivers: any,
-                                        unassigned_riders: any,
-                                        assigned_drivers: any,
-                                        assigned_riders: any) {
+  unassigned_riders: any,
+  assigned_drivers: any,
+  assigned_riders: any) {
   // send messages to everyone saying if they got matched or not, and all relevant details
   for (const [key] of Object.entries(unassigned_drivers)) {
     send_sms("Hello from ant ride.\n\nUnfortunately you were not able to be matched into a ride. You will have to drive by yourself.", key)

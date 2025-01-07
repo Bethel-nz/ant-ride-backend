@@ -106,13 +106,13 @@ export function create_google_maps_route_link(geoapify_response: any,
   return google_map_route_links
 }
 
-export async function geoapify_create_optimized_carpools(data: any, riders: any, drivers: any) {
+export async function geoapify_create_optimized_carpools(data: any, riders: any, drivers: any, max_detour_time: number = 30) {
   // confirmed participants only, time to make carpools
   let drivers_formatted = drivers.map(async (driver: any) => {
     const split_driver_address = driver.address.split('|')
     const event_address = data[0].address.split('|')
 
-    // create a pipe separated string of lat, long for each pickup point for a driver, in order of pickup
+    // create a pipe separated string of lat, long for each pickup point for a driver
     const GEOAPIFY_KEY = Env.get("GEOAPIFY_KEY")
     let waypoints = split_driver_address[1] + ',' + split_driver_address[2] + '|' + event_address[1] + ',' + event_address[2]
     let single_driver_route: any
@@ -121,11 +121,17 @@ export async function geoapify_create_optimized_carpools(data: any, riders: any,
     } catch (error) {
       throw new Error(`Could not get direct routes for every driver ${error}`)
     }
-    // // rount single_driver_route.results[0].time to nearest second
+
     let normal_driving_time = Math.round(single_driver_route.results[0].time)
+
+    // Use driver's max_detour_time if available, otherwise use the global max_detour_time
+    const driver_max_detour = driver.max_detour_time || max_detour_time
+
+    // Calculate maximum allowed time including detour
+    const max_allowed_time = normal_driving_time + (driver_max_detour * 60) // Convert minutes to seconds
+
     return {
       "start_location": [
-        // for some reason geoapify orders it as long, lat, which is backwards form the norm of lat, long
         split_driver_address[2],
         split_driver_address[1]
       ],
@@ -136,15 +142,15 @@ export async function geoapify_create_optimized_carpools(data: any, riders: any,
       "time_windows": [
         [
           0,
-          // add 20 mins on top of normal driving time
-          normal_driving_time + 1200
+          max_allowed_time
         ]
       ],
       "pickup_capacity": driver.seats_available,
       "description": JSON.stringify({
         address: split_driver_address[0],
         number: driver.phone_num,
-        name: driver.name
+        name: driver.name,
+        max_detour_time: driver.max_detour_time
       })
     }
   })
@@ -173,14 +179,15 @@ export async function geoapify_create_optimized_carpools(data: any, riders: any,
   let res: any
   try {
     res = await ky.post(`https://api.geoapify.com/v1/routeplanner?apiKey=${GEOAPIFY_KEY}`, {
-    json:
-    {
-      "mode": "drive",
-      "agents": drivers_formatted,
-      "jobs": riders_formatted
-    }
-  }
-  ).json()
+      json: {
+        "mode": "drive",
+        "agents": drivers_formatted,
+        "jobs": riders_formatted,
+        "options": {
+          "max_detour_time": max_detour_time * 60,
+        }
+      }
+    }).json()
   } catch (error) {
     throw new Error(`Could not create optimized carpools ${error}`)
   }
