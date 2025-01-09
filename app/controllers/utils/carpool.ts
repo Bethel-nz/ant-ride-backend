@@ -106,7 +106,7 @@ export function create_google_maps_route_link(geoapify_response: any,
   return google_map_route_links
 }
 
-export async function geoapify_create_optimized_carpools(data: any, riders: any, drivers: any, max_detour_time: number = 30) {
+export async function geoapify_create_optimized_carpools(data: any, riders: any, drivers: any, global_max_detour_time: number = 30) {
   // confirmed participants only, time to make carpools
   let drivers_formatted = drivers.map(async (driver: any) => {
     const split_driver_address = driver.address.split('|')
@@ -125,7 +125,7 @@ export async function geoapify_create_optimized_carpools(data: any, riders: any,
     let normal_driving_time = Math.round(single_driver_route.results[0].time)
 
     // Use driver's max_detour_time if available, otherwise use the global max_detour_time
-    const driver_max_detour = driver.max_detour_time || max_detour_time
+    const driver_max_detour = driver.max_detour_time || global_max_detour_time
 
     // Calculate maximum allowed time including detour
     const max_allowed_time = normal_driving_time + (driver_max_detour * 60) // Convert minutes to seconds
@@ -150,7 +150,9 @@ export async function geoapify_create_optimized_carpools(data: any, riders: any,
         address: split_driver_address[0],
         number: driver.phone_num,
         name: driver.name,
-        max_detour_time: driver.max_detour_time
+        max_detour_time: driver_max_detour,
+        normal_driving_time,
+        max_allowed_time,
       })
     }
   })
@@ -184,7 +186,6 @@ export async function geoapify_create_optimized_carpools(data: any, riders: any,
         "agents": drivers_formatted,
         "jobs": riders_formatted,
         "options": {
-          "max_detour_time": max_detour_time * 60,
         }
       }
     }).json()
